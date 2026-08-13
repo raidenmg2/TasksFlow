@@ -1,4 +1,4 @@
-package com.taskflow.Taskflow.proyect.entity;
+package com.taskflow.Taskflow.project.entity;
 
 import com.taskflow.Taskflow.common.entity.AuditableEntity;
 import com.taskflow.Taskflow.task.entity.Task;

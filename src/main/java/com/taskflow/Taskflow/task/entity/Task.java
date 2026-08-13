@@ -1,7 +1,7 @@
 package com.taskflow.Taskflow.task.entity;
 
 import com.taskflow.Taskflow.common.entity.AuditableEntity;
-import com.taskflow.Taskflow.proyect.entity.Project;
+import com.taskflow.Taskflow.project.entity.Project;
 import com.taskflow.Taskflow.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

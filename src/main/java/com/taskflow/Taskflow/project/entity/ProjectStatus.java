@@ -1,4 +1,4 @@
-package com.taskflow.Taskflow.proyect.entity;
+package com.taskflow.Taskflow.project.entity;
 
 public enum ProjectStatus {
 
