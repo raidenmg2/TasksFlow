@@ -1,8 +1,16 @@
 package com.taskflow.Taskflow.task.service;
 
+import com.taskflow.Taskflow.project.entity.Project;
+import com.taskflow.Taskflow.project.repository.ProjectRepository;
+import com.taskflow.Taskflow.task.dto.CreateTaskRequest;
+import com.taskflow.Taskflow.task.dto.TaskResponse;
+import com.taskflow.Taskflow.task.dto.UpdateTaskRequest;
+import com.taskflow.Taskflow.task.dto.UpdateTaskStatusRequest;
 import com.taskflow.Taskflow.task.entity.Task;
 import com.taskflow.Taskflow.task.entity.TaskStatus;
 import com.taskflow.Taskflow.task.repository.TaskRepository;
+import com.taskflow.Taskflow.user.entity.User;
+import com.taskflow.Taskflow.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,13 +20,24 @@ import java.util.UUID;
 public class TaskService {
 
     private final TaskRepository taskRepository;
+    private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
 
-    public TaskService(TaskRepository taskRepository) {
+    public TaskService(
+            TaskRepository taskRepository,
+            ProjectRepository projectRepository,
+            UserRepository userRepository) {
+
         this.taskRepository = taskRepository;
+        this.projectRepository = projectRepository;
+        this.userRepository = userRepository;
     }
 
-    public List<Task> findAll() {
-        return taskRepository.findAll();
+    public List<TaskResponse> findAll() {
+        return taskRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     public Task findById(UUID id) {
@@ -26,34 +45,95 @@ public class TaskService {
                 .orElseThrow(() -> new RuntimeException("Tarea no encontrada"));
     }
 
-    public Task save(Task task) {
-        return taskRepository.save(task);
+    public TaskResponse getById(UUID id) {
+        return toResponse(findById(id));
     }
 
-    // Actualización completa para administración
-    public Task update(UUID id, Task task) {
-        Task existingTask = findById(id);
+    public TaskResponse create(CreateTaskRequest request) {
 
-        existingTask.setTitle(task.getTitle());
-        existingTask.setDescription(task.getDescription());
-        existingTask.setPriority(task.getPriority());
-        existingTask.setStatus(task.getStatus());
-        existingTask.setDueDate(task.getDueDate());
+        Project project = projectRepository.findById(request.getProjectId())
+                .orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
 
-        return taskRepository.save(existingTask);
+        User assignedUser = userRepository.findById(request.getAssignedUserId())
+                .orElseThrow(() -> new RuntimeException("Usuario asignado no encontrado"));
+
+        Task task = new Task();
+
+        task.setTitle(request.getTitle());
+        task.setDescription(request.getDescription());
+        task.setPriority(request.getPriority());
+        task.setDueDate(request.getDueDate());
+
+        task.setStatus(TaskStatus.TODO);
+        task.setProject(project);
+        task.setAssignedUser(assignedUser);
+
+        Task savedTask = taskRepository.save(task);
+
+        return toResponse(savedTask);
     }
 
-    // Actualización permitida al usuario asignado
-    public Task updateStatus(UUID id, TaskStatus status) {
+    public TaskResponse update(UUID id, UpdateTaskRequest request) {
+
         Task existingTask = findById(id);
 
-        existingTask.setStatus(status);
+        Project project = projectRepository.findById(request.getProjectId())
+                .orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
 
-        return taskRepository.save(existingTask);
+        User assignedUser = userRepository.findById(request.getAssignedUserId())
+                .orElseThrow(() -> new RuntimeException("Usuario asignado no encontrado"));
+
+        existingTask.setTitle(request.getTitle());
+        existingTask.setDescription(request.getDescription());
+        existingTask.setPriority(request.getPriority());
+        existingTask.setStatus(request.getStatus());
+        existingTask.setDueDate(request.getDueDate());
+
+        existingTask.setProject(project);
+        existingTask.setAssignedUser(assignedUser);
+
+        Task updatedTask = taskRepository.save(existingTask);
+
+        return toResponse(updatedTask);
+    }
+
+    public TaskResponse updateStatus(
+            UUID id,
+            UpdateTaskStatusRequest request) {
+
+        Task existingTask = findById(id);
+
+        existingTask.setStatus(request.getStatus());
+
+        Task updatedTask = taskRepository.save(existingTask);
+
+        return toResponse(updatedTask);
     }
 
     public void delete(UUID id) {
         Task task = findById(id);
         taskRepository.delete(task);
+    }
+
+    private TaskResponse toResponse(Task task) {
+
+        TaskResponse response = new TaskResponse();
+
+        response.setId(task.getId());
+        response.setTitle(task.getTitle());
+        response.setDescription(task.getDescription());
+        response.setPriority(task.getPriority());
+        response.setStatus(task.getStatus());
+        response.setDueDate(task.getDueDate());
+
+        if (task.getProject() != null) {
+            response.setProjectId(task.getProject().getId());
+        }
+
+        if (task.getAssignedUser() != null) {
+            response.setAssignedUserId(task.getAssignedUser().getId());
+        }
+
+        return response;
     }
 }
