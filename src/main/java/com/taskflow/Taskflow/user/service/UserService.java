@@ -1,5 +1,7 @@
 package com.taskflow.Taskflow.user.service;
 
+import com.taskflow.Taskflow.exception.UserEmailAlreadyExistsException;
+import com.taskflow.Taskflow.exception.UserNotFoundException;
 import com.taskflow.Taskflow.user.dto.CreateUserRequest;
 import com.taskflow.Taskflow.user.dto.UpdateUserRequest;
 import com.taskflow.Taskflow.user.dto.UserResponse;
@@ -29,7 +31,7 @@ public class UserService {
 
     public User findById(UUID id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
     }
 
     public UserResponse getById(UUID id) {
@@ -37,6 +39,12 @@ public class UserService {
     }
 
     public UserResponse create(CreateUserRequest request) {
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new UserEmailAlreadyExistsException(
+                    "El email ya está registrado"
+            );
+        }
 
         User user = new User();
 
@@ -56,6 +64,12 @@ public class UserService {
     public UserResponse update(UUID id, UpdateUserRequest request) {
 
         User existingUser = findById(id);
+
+        if (userRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
+            throw new UserEmailAlreadyExistsException(
+                    "El email ya está registrado"
+            );
+        }
 
         existingUser.setFirstName(request.getFirstName());
         existingUser.setLastName(request.getLastName());
