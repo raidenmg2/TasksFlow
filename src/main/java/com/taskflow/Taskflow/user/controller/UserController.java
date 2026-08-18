@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PutMapping;
 import com.taskflow.Taskflow.user.dto.UpdateUserRequest;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.util.List;
 import java.util.UUID;
@@ -57,6 +58,14 @@ public class UserController {
         UserResponse response = userService.update(id, request);
 
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+
+        userService.delete(id);
+
+        return ResponseEntity.noContent().build();
     }
 
 }
