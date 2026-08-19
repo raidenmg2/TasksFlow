@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -25,4 +26,7 @@ public class CreateProjectRequest {
     private LocalDate startDate;
 
     private LocalDate dueDate;
+
+    @NotNull(message = "El propietario es obligatorio")
+    private UUID ownerId;
 }

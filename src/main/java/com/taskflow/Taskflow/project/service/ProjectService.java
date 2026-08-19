@@ -1,5 +1,7 @@
 package com.taskflow.Taskflow.project.service;
 
+import com.taskflow.Taskflow.exception.ProjectNotFoundException;
+import com.taskflow.Taskflow.exception.UserNotFoundException;
 import com.taskflow.Taskflow.project.dto.CreateProjectRequest;
 import com.taskflow.Taskflow.project.dto.ProjectResponse;
 import com.taskflow.Taskflow.project.dto.UpdateProjectRequest;
@@ -7,6 +9,7 @@ import com.taskflow.Taskflow.project.entity.Project;
 import com.taskflow.Taskflow.project.entity.ProjectStatus;
 import com.taskflow.Taskflow.project.repository.ProjectRepository;
 import com.taskflow.Taskflow.user.entity.User;
+import com.taskflow.Taskflow.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,9 +19,14 @@ import java.util.UUID;
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
 
-    public ProjectService(ProjectRepository projectRepository) {
+    public ProjectService(
+            ProjectRepository projectRepository,
+            UserRepository userRepository) {
+
         this.projectRepository = projectRepository;
+        this.userRepository = userRepository;
     }
 
     public List<ProjectResponse> findAll() {
@@ -30,14 +38,21 @@ public class ProjectService {
 
     public Project findById(UUID id) {
         return projectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
+                .orElseThrow(() -> new ProjectNotFoundException(
+                        "Proyecto no encontrado"
+                ));
     }
 
     public ProjectResponse getById(UUID id) {
         return toResponse(findById(id));
     }
 
-    public ProjectResponse create(CreateProjectRequest request, User owner) {
+    public ProjectResponse create(CreateProjectRequest request) {
+
+        User owner = userRepository.findById(request.getOwnerId())
+                .orElseThrow(() -> new UserNotFoundException(
+                        "Usuario no encontrado"
+                ));
 
         Project project = new Project();
 
@@ -70,7 +85,9 @@ public class ProjectService {
     }
 
     public void delete(UUID id) {
+
         Project project = findById(id);
+
         projectRepository.delete(project);
     }
 
