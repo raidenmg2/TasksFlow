@@ -1,5 +1,7 @@
 package com.taskflow.Taskflow.task.service;
 
+import com.taskflow.Taskflow.exception.ProjectNotFoundException;
+import com.taskflow.Taskflow.exception.UserNotFoundException;
 import com.taskflow.Taskflow.project.entity.Project;
 import com.taskflow.Taskflow.project.repository.ProjectRepository;
 import com.taskflow.Taskflow.task.dto.CreateTaskRequest;
@@ -12,6 +14,7 @@ import com.taskflow.Taskflow.task.repository.TaskRepository;
 import com.taskflow.Taskflow.user.entity.User;
 import com.taskflow.Taskflow.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import com.taskflow.Taskflow.exception.TaskNotFoundException;
 
 import java.util.List;
 import java.util.UUID;
@@ -42,7 +45,9 @@ public class TaskService {
 
     public Task findById(UUID id) {
         return taskRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarea no encontrada"));
+                .orElseThrow(() -> new TaskNotFoundException(
+                        "Tarea no encontrada"
+                ));
     }
 
     public TaskResponse getById(UUID id) {
@@ -52,10 +57,14 @@ public class TaskService {
     public TaskResponse create(CreateTaskRequest request) {
 
         Project project = projectRepository.findById(request.getProjectId())
-                .orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
+                .orElseThrow(() -> new ProjectNotFoundException(
+                        "Proyecto no encontrado"
+                ));
 
         User assignedUser = userRepository.findById(request.getAssignedUserId())
-                .orElseThrow(() -> new RuntimeException("Usuario asignado no encontrado"));
+                .orElseThrow(() -> new UserNotFoundException(
+                        "Usuario asignado no encontrado"
+                ));
 
         Task task = new Task();
 
@@ -78,10 +87,14 @@ public class TaskService {
         Task existingTask = findById(id);
 
         Project project = projectRepository.findById(request.getProjectId())
-                .orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
+                .orElseThrow(() -> new ProjectNotFoundException(
+                        "Proyecto no encontrado"
+                ));
 
         User assignedUser = userRepository.findById(request.getAssignedUserId())
-                .orElseThrow(() -> new RuntimeException("Usuario asignado no encontrado"));
+                .orElseThrow(() -> new UserNotFoundException(
+                        "Usuario asignado no encontrado"
+                ));
 
         existingTask.setTitle(request.getTitle());
         existingTask.setDescription(request.getDescription());
